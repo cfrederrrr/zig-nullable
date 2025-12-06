@@ -12,7 +12,7 @@ pub fn build(b: *std.Build) void {
 
     const lib = b.addLibrary(.{
         .linkage = .static,
-        .name = "cli",
+        .name = "nullable",
         .root_module = mod,
     });
 

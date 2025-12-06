@@ -14,7 +14,7 @@ pub const Error = error{
 };
 
 /// Useful for deserializing structs
-fn Nullable(comptime T: type) type {
+pub fn Nullable(comptime T: type) type {
     const ti = @typeInfo(T);
     const si = ti.@"struct";
 

@@ -10,13 +10,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    // const lib = b.addLibrary(.{
-    //     .linkage = .static,
-    //     .name = "cli",
-    //     .root_module = mod,
-    // });
-    //
-    // b.installArtifact(lib);
+    const lib = b.addLibrary(.{
+        .linkage = .static,
+        .name = "cli",
+        .root_module = mod,
+    });
+
+    b.installArtifact(lib);
 
     const mod_tests = b.addTest(.{ .root_module = mod });
     const run_mod_tests = b.addRunArtifact(mod_tests);

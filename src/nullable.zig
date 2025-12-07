@@ -62,7 +62,7 @@ pub fn deinitOwned(any: anytype, owner: Allocator) void {
         .bool, .comptime_int, .int, .null => {},
         .optional => if (any) |_| deinitOwned(any.?, owner),
         .@"struct" => inline for (ti.@"struct".fields) |f| deinitOwned(&@field(any, f.name), owner),
-        .array => for (any) |*i| deinitOwned(i, owner),
+        .array => for (any) |i| deinitOwned(i, owner),
         .pointer => |p| switch (p.size) {
             .slice => {
                 switch (@typeInfo(p.child)) {
@@ -75,7 +75,7 @@ pub fn deinitOwned(any: anytype, owner: Allocator) void {
             },
             .one => switch (@typeInfo(p.child)) {
                 .bool, .comptime_int, .int, .null => {},
-                .optional => if (any.*) |a| deinitOwned(a, owner), // TODO: this is wrong
+                .optional => if (any.*) |_| deinitOwned(any.*.?, owner), // TODO: this is wrong
                 .pointer => deinitOwned(any.*, owner), // TODO: this is wrong
                 .array => for (any) |*i| deinitOwned(i, owner),
                 .@"struct" => |s| inline for (s.fields) |f| deinitOwned(&@field(any.*, f.name), owner),
@@ -85,6 +85,38 @@ pub fn deinitOwned(any: anytype, owner: Allocator) void {
         },
         else => @compileError("Unsupported type '" ++ @typeName(T) ++ "'"),
     }
+}
+
+test "deinitOwned" {
+    const X = struct {
+        boolean: bool,
+        op: ?bool,
+        item: struct { a: usize },
+        array: [1]usize,
+        // ptr: *usize,
+        nested: struct {
+            boolean: ?bool = null,
+            op: ?bool = null,
+            item: ?struct { a: usize } = null,
+            array: ?[1]usize = null,
+            // ptr: *usize,
+        },
+    };
+
+    const NullableX = Nullable(X);
+
+    var x = try std.testing.allocator.create(NullableX);
+    defer std.testing.allocator.destroy(x);
+    // const nested = try std.testing.allocator.create(@TypeOf(x.nested));
+    //
+    // nested.*.?.array = .{1};
+    x.boolean = true;
+    x.op = true;
+    x.item = .{ .a = 10 };
+    // x.nested = nested;
+    x.nested = .{ .array = .{1} };
+
+    deinitOwned(x, std.testing.allocator);
 }
 
 pub fn transfer(t: anytype, n: *Nullable(@TypeOf(t.*))) void {

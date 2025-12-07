@@ -59,6 +59,7 @@ pub fn deinitOwned(any: anytype, owner: Allocator) void {
         .array => for (any) |i| deinitOwned(i, owner),
         .pointer => |p| switch (p.size) {
             .slice => {
+                if (p.child == u8) return;
                 switch (@typeInfo(p.child)) {
                     .bool, .comptime_int, .int, .null => {},
                     .pointer, .array, .@"struct" => for (any) |*i| deinitOwned(i, owner),

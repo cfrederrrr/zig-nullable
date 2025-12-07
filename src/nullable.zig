@@ -1,7 +1,3 @@
-//! The decoder owns the message and any allocations made during decoding
-//! It copies the message provided to .init()
-//! Calling .deinit() on a decoder frees both the message and everything it had to allocate during decoding
-
 // much of this is borrowed from sphaerophoria https://www.youtube.com/watch?v=fh3i5_61LYk
 
 const std = @import("std");
@@ -9,9 +5,7 @@ const Allocator = std.mem.Allocator;
 
 const Attributes = std.builtin.Type.StructField.Attributes;
 
-pub const Error = error{
-    MissingFields,
-};
+pub const Error = error{MissingFields};
 
 /// Useful for deserializing structs
 pub fn Nullable(comptime T: type) type {
@@ -75,7 +69,7 @@ pub fn deinitOwned(any: anytype, owner: Allocator) void {
             },
             .one => switch (@typeInfo(p.child)) {
                 .bool, .comptime_int, .int, .null => {},
-                .optional => if (any.*) |_| deinitOwned(any.*.?, owner), // TODO: this is wrong
+                .optional => if (any.*) |_| deinitOwned(any.*, owner), // TODO: this is wrong
                 .pointer => deinitOwned(any.*, owner), // TODO: this is wrong
                 .array => for (any) |*i| deinitOwned(i, owner),
                 .@"struct" => |s| inline for (s.fields) |f| deinitOwned(&@field(any.*, f.name), owner),

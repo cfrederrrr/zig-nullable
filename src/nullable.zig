@@ -71,7 +71,7 @@ pub fn deinitOwned(any: anytype, owner: Allocator) void {
             .one => switch (@typeInfo(p.child)) {
                 .bool, .comptime_int, .int, .null => {},
                 .optional => deinitOwned(any.*, owner), // TODO: this is wrong
-                .pointer => {}, // deinitOwned(any.*, owner), // TODO: this is wrong
+                .pointer => deinitOwned(any.*, owner), // TODO: this is wrong
                 .array => for (any) |*i| deinitOwned(i, owner),
                 .@"struct" => |s| inline for (s.fields) |f| deinitOwned(&@field(any.*, f.name), owner),
                 else => @compileError("pointer to single '" ++ @typeName(p.child) ++ "' not supported"),
